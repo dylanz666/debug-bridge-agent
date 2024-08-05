@@ -130,5 +130,6 @@ async def clear_bridge_content_by_pid(pid):
 FileUtil.makedirs_if_not_exist("output")
 FileUtil.create_file_if_not_exist(pid_mapper_file)
 
-app.include_router(product.router)
-app.include_router(user.router)
+# below is for demo usage
+# app.include_router(product.router)
+# app.include_router(user.router)
