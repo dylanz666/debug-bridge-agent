@@ -4,7 +4,6 @@ import subprocess
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from routers import product, user
 from utils.data_util import DataUtil
 from utils.file_util import FileUtil
 from utils.random_util import RandomUtil
