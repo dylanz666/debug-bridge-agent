@@ -110,7 +110,7 @@ async def clear_bridge_contents():
 
 
 @app.post("/bridge/content/clear")
-async def clear_bridge_content(pid):
+async def clear_bridge_content_by_pid(pid):
     output_file_path = DataUtil.get_data_by_jsonpath(pid_mapper_file, f"pid_{pid}")
     print(output_file_path)
     if not output_file_path or not os.path.exists(output_file_path):
