@@ -43,5 +43,8 @@ https://127.0.0.1:8000/docs
 https://127.0.0.1:<your port>/docs
 ```
 
-5. Reference.
-* TBD
+5. I'm also preparing a web page client to show some details and agent's output.
+* __Please refer to__: https://github.com/dylanz666/debug-bridge-client
+
+6. Reference.
+* __FastAPI__: https://fastapi.tiangolo.com/tutorial/
