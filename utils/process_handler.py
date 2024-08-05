@@ -1,5 +1,4 @@
 import psutil
-import subprocess
 
 
 class ProcessHandler:

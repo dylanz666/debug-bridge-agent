@@ -128,7 +128,7 @@ async def clear_bridge_content(pid):
 
 
 FileUtil.makedirs_if_not_exist("output")
-FileUtil.create_file_if_not_exist("pid_mapper.json")
+FileUtil.create_file_if_not_exist(pid_mapper_file)
 
 app.include_router(product.router)
 app.include_router(user.router)
