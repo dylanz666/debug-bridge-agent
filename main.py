@@ -2,6 +2,7 @@ import os.path
 import subprocess
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from utils.data_util import DataUtil
@@ -9,6 +10,14 @@ from utils.file_util import FileUtil
 from utils.random_util import RandomUtil
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 pid_mapper_file = "pid_mapper.json"
 
@@ -24,7 +33,7 @@ class Command(BaseModel):
 
 @app.post("/bridge/run")
 async def run_command(command: Command):
-    if command.command is None:
+    if command.command is None or command.command is "":
         return {
             "status": "fail",
             "message": "No command provided!"
@@ -40,7 +49,8 @@ async def run_command(command: Command):
         })
         return {
             "status": "success",
-            "message": f"The command is executed, pid: {process.pid}"
+            "message": f"The command is executed~",
+            "pid": process.pid
         }
 
 
@@ -69,6 +79,7 @@ async def get_bridge_content(pid, start_line=0, line_length=10):
             "message": f"Cannot find content related to your pid {pid}, please double check!"
         }
     start_line = int(start_line) - 1
+    line_length = int(line_length)
     content = []
     with open(output_file_path, 'r') as file:
         for _ in range(start_line):
@@ -90,40 +101,48 @@ async def get_pids():
     pids = []
     for pid in pid_mapper:
         pids.append(pid[4:])
+    pids = pids[::-1]
     return {
         "pids": pids,
         "details": pid_mapper
     }
 
 
-@app.post("/bridge/contents/clear")
-async def clear_bridge_contents():
+@app.post("/bridge/pids/clear")
+async def clear_all_pids():
     output_files = FileUtil.list_all_files("output")
     for file in output_files:
         FileUtil.remove_if_exist(file)
+    # close pid
+    pid_mapper = DataUtil.get_data(pid_mapper_file)
+    quantity = 0
+    for pid in pid_mapper:
+        quantity += 1
+        os.system(f"taskkill /F /PID {pid[4:]}")
+    # delete pid_mapper_file
     FileUtil.clear(pid_mapper_file)
     return {
         "status": "success",
-        "quantity": len(output_files)
+        "quantity": quantity,
+        "message": f"{quantity} pids have been cleared~"
     }
 
 
-@app.post("/bridge/content/clear")
-async def clear_bridge_content_by_pid(pid):
-    output_file_path = DataUtil.get_data_by_jsonpath(pid_mapper_file, f"pid_{pid}")
-    print(output_file_path)
-    if not output_file_path or not os.path.exists(output_file_path):
-        return {
-            "status": "success",
-            "message": f"No need to clear content for pid {pid}"
-        }
-    output_files = FileUtil.list_all_files("output")
-    for file in output_files:
-        FileUtil.remove_if_exist(file)
+@app.post("/bridge/pid/clear")
+async def clear_pid(pid):
+    os.system(f"taskkill /F /PID {pid}")
+
+    output_file_path = DataUtil.get_data_by_jsonpath(pid_mapper_file, f"pid_{pid}.output")
+    FileUtil.remove_if_exist(output_file_path)
     data = DataUtil.get_data(pid_mapper_file)
     del data[f"pid_{pid}"]
     FileUtil.clear(pid_mapper_file)
-    FileUtil.write(pid_mapper_file, data)
+    DataUtil.write_json(pid_mapper_file, data)
+    return {
+        "status": "success",
+        "pid": pid,
+        "message": f"Clear PID: {pid}, Success~"
+    }
 
 
 FileUtil.makedirs_if_not_exist("output")

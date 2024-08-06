@@ -52,6 +52,13 @@ class DataUtil:
             json.dump(data, file, indent=2)
             file.close()
 
+    @classmethod
+    def write_json(cls, file_path, data):
+        data_file_path = os.path.join(cls.root_path, file_path)
+        with open(data_file_path, 'w') as file:
+            json.dump(data, file, indent=2)
+            file.close()
+
 
 if __name__ == "__main__":
     pass
