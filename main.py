@@ -40,6 +40,7 @@ async def run_command(command: Command):
         }
     random_output_file_path = f"output/{RandomUtil.get_random_string(10)}.txt"
     with open(random_output_file_path, 'w') as file:
+        # fixme: 目前还无法实时输出到文件
         process = subprocess.Popen(command.command, stdout=file, shell=True)
         # don't use process.wait() here, as we need to response immediately
         # process.wait()
@@ -57,7 +58,6 @@ async def run_command(command: Command):
 @app.get("/bridge/content/all")
 async def get_bridge_content_by_pid(pid):
     output_file_path = DataUtil.get_data_by_jsonpath(pid_mapper_file, f"pid_{pid}.output")
-    print(output_file_path)
     if not output_file_path or not os.path.exists(output_file_path):
         return {
             "status": "fail",
@@ -76,7 +76,8 @@ async def get_bridge_content(pid, start_line=0, line_length=10):
     if not output_file_path or not os.path.exists(output_file_path):
         return {
             "status": "fail",
-            "message": f"Cannot find content related to your pid {pid}, please double check!"
+            "message": f"Cannot find content related to your pid {pid}, please double check!",
+            "content": []
         }
     start_line = int(start_line) - 1
     line_length = int(line_length)
@@ -111,8 +112,13 @@ async def get_pids():
 @app.post("/bridge/pids/clear")
 async def clear_all_pids():
     output_files = FileUtil.list_all_files("output")
+    file_deleted_quantity = 0
     for file in output_files:
-        FileUtil.remove_if_exist(file)
+        try:
+            FileUtil.remove_if_exist(file)
+            file_deleted_quantity += 1
+        except PermissionError:
+            pass
     # close pid
     pid_mapper = DataUtil.get_data(pid_mapper_file)
     quantity = 0
@@ -121,10 +127,11 @@ async def clear_all_pids():
         os.system(f"taskkill /F /PID {pid[4:]}")
     # delete pid_mapper_file
     FileUtil.clear(pid_mapper_file)
+    clear_quantity = file_deleted_quantity if file_deleted_quantity < quantity else quantity
     return {
         "status": "success",
-        "quantity": quantity,
-        "message": f"{quantity} pids have been cleared~"
+        "quantity": clear_quantity,
+        "message": f"{clear_quantity} pids have been cleared~"
     }
 
 
