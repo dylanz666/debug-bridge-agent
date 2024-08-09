@@ -40,7 +40,7 @@ async def run_command(command: Command):
         }
     random_output_file_path = f"output/{RandomUtil.get_random_string(10)}.txt"
     with open(random_output_file_path, 'w') as file:
-        # fixme: 目前还无法实时输出到文件
+        # fixme: need to make it able to save to file very quick
         process = subprocess.Popen(command.command, stdout=file, shell=True)
         # don't use process.wait() here, as we need to response immediately
         # process.wait()
